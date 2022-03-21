@@ -11,5 +11,6 @@ ios/Runner/GeneratedPluginRegistrant.*
 
 .idea
 *.iml
+pubspec.lock
 flutter_01.log
 example/ios/Flutter/.last_build_id
