@@ -8,9 +8,9 @@ class MultiSelectFormField extends FormField<dynamic> {
   final Widget hintWidget;
   final bool required;
   final String errorText;
-  final List? dataSource;
-  final String? textField;
-  final String? valueField;
+  final List dataSource;
+  final String textField;
+  final String valueField;
   final Function? change;
   final Function? open;
   final Function? close;
@@ -38,9 +38,9 @@ class MultiSelectFormField extends FormField<dynamic> {
     this.required = false,
     this.errorText = 'Please select one or more options',
     this.leading,
-    this.dataSource,
-    this.textField,
-    this.valueField,
+    required this.dataSource,
+    required this.textField,
+    required this.valueField,
     this.change,
     this.open,
     this.close,
@@ -66,10 +66,12 @@ class MultiSelectFormField extends FormField<dynamic> {
           builder: (FormFieldState<dynamic> state) {
             List<Widget> _buildSelectedOptions(state) {
               List<Widget> selectedOptions = [];
+
               if (state.value != null) {
-                // Filter out items that have been removed from the data source:
-                state.value.where((item) => dataSource!.contains(item)).forEach((item) {
-                  var existingItem = dataSource!.singleWhere(((itm) => itm[valueField] == item));
+                state.value
+                    .where((item) => dataSource.any((dataSourceEntry) => dataSourceEntry[valueField] == item))
+                    .forEach((item) {
+                  var existingItem = dataSource.singleWhere(((itm) => itm[valueField] == item));
                   selectedOptions.add(Chip(
                     labelStyle: chipLabelStyle,
                     backgroundColor: chipBackGroundColor,
@@ -88,13 +90,10 @@ class MultiSelectFormField extends FormField<dynamic> {
               onTap: !enabled
                   ? null
                   : () async {
-                      List? initialSelected = state.value;
-                      if (initialSelected == null) {
-                        initialSelected = [];
-                      }
+                      List initialSelected = state.value ?? [];
 
                       final items = <MultiSelectDialogItem<dynamic>>[];
-                      dataSource!.forEach((item) {
+                      dataSource.forEach((item) {
                         items.add(MultiSelectDialogItem(item[valueField], item[textField]));
                       });
 
@@ -160,7 +159,14 @@ class MultiSelectFormField extends FormField<dynamic> {
                         ],
                       ),
                     ),
-                    state.value != null && state.value.length > 0
+                    // Filtering the values that don't exist in the data source allows us to correctly display the hint text when we've deleted an entry from the data source.
+                    state.value != null &&
+                            state.value
+                                    .where((item) =>
+                                        dataSource.any((dataSourceEntry) => dataSourceEntry[valueField] == item))
+                                    .toList()
+                                    .length >
+                                0
                         ? Wrap(
                             spacing: 8.0,
                             runSpacing: 0.0,
